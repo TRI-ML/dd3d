@@ -1,0 +1,28 @@
+defaults:
+  - base_train_dataset
+
+NAME: nusc_train
+
+CANONICAL_BOX3D_SIZES: [
+    # (width, length, height)
+      [2.3524184,   0.5062202,  1.0413622], # barrier
+      [0.61416006,  1.7016163,  1.3054738], # bicycle
+      [2.9139307,  10.725025,   3.2832346], # bus
+      [1.9751819,   4.641267,   1.74352], # car
+      [2.772134,    6.565072,   3.2474296], # construction vehicle
+      [0.7800532,   2.138673,   1.4437162], # motorcycle
+      [0.6667362,   0.7181772,  1.7616143], # pedestrian
+      [0.40246472,  0.4027083,  1.0084083], # traffic cone
+      [3.0059454,  12.8197,     4.1213827], # trailer
+      [2.4986045,   6.9310856,  2.8382742] # truck
+]
+
+NUM_CLASSES: 10
+
+MEAN_DEPTH_PER_LEVEL: [44.921,  20.252, 11.712, 7.166,  8.548]
+STD_DEPTH_PER_LEVEL:  [24.331,   9.833,  6.223, 4.611,  8.275]
+
+DATASET_MAPPER: "nuscenes"
+
+MIN_NUM_LIDAR_PTS: 3
+MIN_BOX_VISIBILITY: 0.2

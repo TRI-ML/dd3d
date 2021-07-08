@@ -1,0 +1,6 @@
+# Number of data loading threads
+NUM_WORKERS: 4
+
+# (dennis.park) Options: InferenceSampler, InferenceGroupSampler
+# If using `InferenceGroupSampler`, the user must specify `NUM_IMAGES_PER_GROUP` somewhere else.
+SAMPLER: "InferenceSampler"

@@ -1,0 +1,27 @@
+defaults:
+  - /models/dd3d@DD3D
+  - /visualizers/common@VIS
+  - /visualizers/d2@VIS.D2
+  - /visualizers/box3d@VIS.BOX3D
+
+INPUT:
+  FORMAT: BGR
+
+MODEL:
+  DEVICE: cuda
+  META_ARCHITECTURE: DD3D
+
+  # Values to be used for image normalization (BGR order, since INPUT.FORMAT defaults to BGR).
+  # To train on images of different number of channels, just set different mean & std.
+  # Default values are the mean pixel value from ImageNet: [103.53, 116.28, 123.675]
+  PIXEL_MEAN: [103.530, 116.280, 123.675]
+  # NOTE (dennis.park): This is set to [1.0, 1.0, 1.0] in detectron2.
+  PIXEL_STD: [57.375, 57.120, 58.395]
+
+  # Path (a file path, or S3 URL like s3://... ) to a checkpoint file
+  # to be loaded to the model.
+  CKPT: ""
+
+  BOX2D_ON: True
+  BOX3D_ON: True
+  DEPTH_ON: False

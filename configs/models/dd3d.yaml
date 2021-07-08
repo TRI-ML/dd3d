@@ -1,0 +1,77 @@
+IN_FEATURES: ${FE.OUT_FEATURES}
+
+NUM_CLASSES: ${DATASETS.TRAIN.NUM_CLASSES}
+
+# If None, then the feature location starts from (0, 0)
+# If "half", then it starts from the (stride / 2, stride / 2)
+FEATURE_LOCATIONS_OFFSET: none # "none" or "half"
+
+# Range of sizes that each FPN level is responsible for.
+SIZES_OF_INTEREST: [64, 128, 256, 512]
+
+INFERENCE:
+  DO_NMS: True # 2D NMS
+  DO_POSTPROCESS: True # Resize instances according to the original image size.
+  DO_BEV_NMS: False # NMS in BEV space.
+  BEV_NMS_IOU_THRESH: 0.3
+  NUSC_SAMPLE_AGGREGATE: False
+
+FCOS2D:
+  _VERSION: v2
+  NORM: BN
+  NUM_CLS_CONVS: 4
+  NUM_BOX_CONVS: 4
+  USE_DEFORMABLE: False
+  USE_SCALE: True
+  BOX2D_SCALE_INIT_FACTOR: 1.0
+
+  LOSS:
+    ALPHA: 0.25
+    GAMMA: 2.0
+    LOC_LOSS_TYPE: giou
+
+  INFERENCE:
+    THRESH_WITH_CTR: True
+    PRE_NMS_THRESH: 0.05
+    PRE_NMS_TOPK: 1000
+    POST_NMS_TOPK: 100
+    NMS_THRESH: 0.6
+
+FCOS3D:
+  NORM: BN
+  NUM_CONVS: 4
+  USE_DEFORMABLE: False
+  USE_SCALE:  True
+  DEPTH_SCALE_INIT_FACTOR: 0.3
+  PROJ_CTR_SCALE_INIT_FACTOR: 1.0
+  PER_LEVEL_PREDICTORS: False
+
+  # If True, then the depth prediction is scaled using focal lengths; this enables camera-awareness.
+  SCALE_DEPTH_BY_FOCAL_LENGTHS: True
+  SCALE_DEPTH_BY_FOCAL_LENGTHS_FACTOR: 500.
+
+  MEAN_DEPTH_PER_LEVEL: ${DATASETS.TRAIN.MEAN_DEPTH_PER_LEVEL}
+  STD_DEPTH_PER_LEVEL: ${DATASETS.TRAIN.STD_DEPTH_PER_LEVEL}
+
+  MIN_DEPTH: 0.1
+  MAX_DEPTH: 80.0
+
+  CANONICAL_BOX3D_SIZES: ${DATASETS.TRAIN.CANONICAL_BOX3D_SIZES}
+  CLASS_AGNOSTIC_BOX3D: False
+
+  # If True, then the network predicts allocentric (local) orientation.
+  PREDICT_ALLOCENTRIC_ROT: True
+  # If True, then the network predicts L2 distance between camera and box center; if False, then it predicts the z-value.
+  PREDICT_DISTANCE: False
+
+  LOSS:
+    SMOOTH_L1_BETA: 0.05
+    MAX_LOSS_PER_GROUP_DISENT: 20.0
+    CONF_3D_TEMPERATURE: 1.0
+
+    WEIGHT_BOX3D: 2.0
+    WEIGHT_CONF3D: 1.0
+
+  PREPARE_TARGET:
+    CENTER_SAMPLE: True
+    POS_RADIUS: 1.5

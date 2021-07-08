@@ -1,0 +1,74 @@
+# @package _global_
+defaults:
+  - /evaluators/nuscenes@EVALUATORS.NUSCENES
+  - override /meta_arch: dd3d
+  - override /train_datasets@DATASETS.TRAIN: nuscenes
+  - override /test_datasets@DATASETS.TEST: nuscenes
+  - override /feature_extractors@FE: v2_99_fpn
+
+MODEL:
+  META_ARCHITECTURE: NuscenesDD3D
+  # from-coco, IODA-pretrained.
+  CKPT: https://tri-ml-public.s3.amazonaws.com/github/dd3d/pretrained/depth_pretrained_v99-3jlw0p36-20210423_010520-model_final-remapped.pth
+
+FE:
+  BACKBONE:
+    NORM: FrozenBN
+  FPN:
+    NORM: FrozenBN
+  OUT_FEATURES: ${.FPN.OUT_FEATURES}
+
+DD3D:
+  FCOS2D:
+    NORM: BN
+    INFERENCE:
+      NMS_THRESH: 0.75
+
+  FCOS3D:
+    NORM: FrozenBN
+
+  NUSC:
+    LOSS:
+      WEIGHT_ATTR: 0.2
+      WEIGHT_SPEED: 0.2
+    INFERENCE:
+      NUM_IMAGES_PER_SAMPLE: ${DATASETS.TEST.NUM_IMAGES_PER_SAMPLE}
+      MAX_NUM_DETS_PER_SAMPLE: 500
+
+INPUT:
+  RESIZE:
+    # Nuscens images are (900, 1600)
+    MIN_SIZE_TRAIN: [640, 672, 704, 736, 768, 800, 832, 864, 896, 928, 960, 992, 1024, 1056, 1088, 1120, 1152]
+    MAX_SIZE_TRAIN: 10000
+    MIN_SIZE_TEST: 896
+    MAX_SIZE_TEST: 100000
+
+SOLVER:
+  IMS_PER_BATCH: 64 # need at least 400 GPU mem (with fp16).
+  BASE_LR: 0.002
+  MAX_ITER: 120000
+  STEPS: [100000, 115000]
+  WARMUP_ITERS: 2000
+  MIXED_PRECISION_ENABLED: True
+  CHECKPOINT_PERIOD: 2000
+
+TEST:
+  IMS_PER_BATCH: 192 # 6 * 32 (must be multiple of 6 x #GPUs.)
+  EVAL_PERIOD: 2000
+  AUG:
+    ENABLED: True
+    MIN_SIZES: [640, 768, 896, 1024, 1152]
+    MAX_SIZE: 100000
+    FLIP: True
+
+DATALOADER:
+  TRAIN:
+    NUM_WORKERS: 12
+    SAMPLER: RepeatFactorTrainingSampler
+    REPEAT_THRESHOLD: 0.8
+  TEST:
+    SAMPLER: InferenceGroupSampler
+    NUM_IMAGES_PER_GROUP: ${DATASETS.TEST.NUM_IMAGES_PER_SAMPLE}
+
+WANDB:
+  TAGS: [nusc-val, v2-99, bn]

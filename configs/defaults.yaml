@@ -1,0 +1,52 @@
+defaults:
+  - _self_
+  - train_datasets@DATASETS.TRAIN:
+  - test_datasets@DATASETS.TEST:
+  - feature_extractors@FE:
+  - meta_arch@:
+  - common/train_dataloader@DATALOADER.TRAIN
+  - common/test_dataloader@DATALOADER.TEST
+  - common/augmentation@INPUT
+  - common/optimizer@SOLVER
+  - common/test@TEST
+
+WANDB:
+  ENABLED: False
+  # If True, then it will not upload to the W&B server.
+  DRYRUN: False
+  PROJECT: dd3d
+  GROUP:
+  TAGS: []
+
+EVAL_ONLY: False
+EVAL_ON_START: False
+
+ONLY_REGISTER_DATASETS: False
+
+OUTPUT_ROOT: './outputs'
+
+SYNC_OUTPUT_DIR_S3:
+  ENABLED: False
+  # The root path in S3 to cache working directories. Must start with 's3://'
+  ROOT_IN_S3: ???
+  # How frequently (in training steps) to sync the working directory.
+  PERIOD: 1000
+
+DATASET_ROOT: /data/datasets/
+TMP_DIR: /tmp/
+
+hydra:
+  callbacks:
+    distributed_callback:
+      _target_: tridet.utils.hydra.callbacks.SetupDistributedCallback
+    wandb_callback:
+      _target_: tridet.utils.hydra.callbacks.WandbInitCallback
+    output_dir_callback:
+      _target_: tridet.utils.hydra.callbacks.SyncOutputDirCallback
+    d2_logger_callback:
+      _target_: tridet.utils.hydra.callbacks.D2LoggerCallback
+    ckpt_path_callback:
+      _target_: tridet.utils.hydra.callbacks.CkptPathResolverCallback
+    sync_output_s3_end_callback:
+      _target_: tridet.utils.hydra.callbacks.SyncOutputS3BeforeEnd
+  verbose: False

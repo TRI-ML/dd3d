@@ -1,0 +1,9 @@
+defaults:
+  - d2_fpn@FPN
+
+BUILDER: build_fcos_dla_fpn_backbone_p67
+
+BACKBONE:
+  NAME: DLA-34
+  OUT_FEATURES: [level3, level4, level5]
+  NORM: BN

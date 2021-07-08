@@ -1,0 +1,12 @@
+defaults:
+  - base_visualizer
+
+DATALOADER:
+  SCALE: 1.0
+  RENDER_LABELS: True
+
+PREDICTIONS:
+  SCALE: 1.0
+  RENDER_LABELS: True
+  THRESHOLD: 0.5
+  MIN_DEPTH_CENTER: 0.

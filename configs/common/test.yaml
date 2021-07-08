@@ -1,0 +1,9 @@
+ENABLED: True
+
+# The period (in terms of steps) to evaluate the model during training.
+EVAL_PERIOD: 1000
+EVAL_ON_START: False
+ADDITIONAL_EVAL_STEPS: []
+
+# (dennis.park) detectron2 hardcodes # ims per gpu to 1.
+IMS_PER_BATCH: 16

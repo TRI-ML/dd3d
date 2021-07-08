@@ -1,0 +1,7 @@
+defaults:
+  - base_test_dataset
+
+NAME: nusc_val-subsample-8
+
+NUSC_SAMPLE_AGGREGATE_IN_INFERENCE: True
+NUM_IMAGES_PER_SAMPLE: 6

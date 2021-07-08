@@ -1,0 +1,59 @@
+# Copyright 2016-2018 Toyota Research Institute.  All rights reserved.
+# pylintrc config file based on driving/src/utils/pylintrc
+[MASTER]
+accept-no-param-doc=no
+accept-no-return-doc=yes
+accept-no-yields-doc=yes
+
+[REPORTS]
+reports=no
+# Make errors emacs-compatible
+msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'
+
+[TYPECHECK]
+ignored-classes=
+    PurePath
+
+[MESSAGES CONTROL]
+disable=
+   # We do not want lazy logging, as error during lazy logging are caught and
+   # ignored. Not a good recipe for reliable logging.
+   logging-not-lazy,
+   # also allow .format in logging calls
+   logging-format-interpolation,
+   # Do not enforce "refactor" rules
+   R,
+   C, duplicate-code,
+   # Temporary disable complexity checks.
+   too-many-instance-attributes, too-many-branches, too-many-statements,
+   too-many-arguments, too-many-locals,
+   # Do not complain on fixme/TODO's
+   fixme,
+   # Do not complain if we locally disabled a rule
+   locally-disabled,
+   # We do not care if we have too few public methods.
+   too-few-public-methods,
+   # We do not care if overridden methods use different arguments.
+   arguments-differ,
+   # Since this doesn't check control-flow, it has lots of false positives.
+   invalid-unary-operand-type,
+   not-callable,
+   no-member,
+   protected-access,
+   attribute-defined-outside-init,
+   global-statement,
+   W0123,
+   W1401,
+   # allow multiple arguments for string formatting
+   E1305,
+   # bypass import error in setup.py
+   E0401,
+   E0611,
+   # suppress Lambda warnings
+   W0108,
+   # allow un-implemented abstract method in sub-classes
+   W0223,
+   # allow explicit return in __init__
+   E0101,
+   # (dennis.park) Use f-strings in logging.
+   W1203

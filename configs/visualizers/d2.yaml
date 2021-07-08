@@ -1,0 +1,11 @@
+defaults:
+  - base_visualizer
+
+DATALOADER:
+  SCALE: 1.0
+  COLOR_MODE: "image"
+
+PREDICTIONS:
+  SCALE: 1.0
+  COLOR_MODE: "image"
+  THRESHOLD: 0.4

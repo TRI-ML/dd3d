@@ -1,0 +1,13 @@
+[style]
+based_on_style = pep8
+indent_width = 4
+column_limit = 120
+arithmetic_precedence_indication = false
+spaces_before_comment = 2
+split_complex_comprehension = true
+split_penalty_comprehension = 2100
+blank_line_before_nested_class_or_def = false
+align_closing_bracket_with_visual_indent = true
+dedent_closing_brackets = true
+coalesce_brackets = true
+join_multiple_lines = false

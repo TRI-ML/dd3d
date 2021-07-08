@@ -1,0 +1,129 @@
+FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04
+
+ENV PYTHON_VERSION=3.8
+
+# -------------------------
+# Optional: AWS credentials
+# -------------------------
+ARG AWS_SECRET_ACCESS_KEY
+ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
+ARG AWS_ACCESS_KEY_ID
+ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+
+ARG AWS_DEFAULT_REGION
+ENV AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+
+# -------------------------
+# Optional: W&B credentials
+# -------------------------
+ARG WANDB_ENTITY
+ENV WANDB_ENTITY=${WANDB_ENTITY}
+
+ARG WANDB_API_KEY
+ENV WANDB_API_KEY=${WANDB_API_KEY}
+
+# -------------------------
+# Install core APT packages.
+# -------------------------
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+      # essential
+      build-essential \
+      cmake \
+      ffmpeg \
+      g++-4.8 \
+      git \
+      curl \
+      docker.io \
+      vim \
+      wget \
+      unzip \
+      htop \
+      libjpeg-dev \
+      libpng-dev \
+      libavdevice-dev \
+      pkg-config \
+      # python
+      python${PYTHON_VERSION} \
+      python${PYTHON_VERSION}-dev \
+      python3-tk \
+      python${PYTHON_VERSION}-distutils \
+      # opencv
+      python3-opencv \
+    # set python
+    && ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python \
+    && ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# --------------------------------------------------
+# We use 'mpirun' for launching distributed training.
+# --------------------------------------------------
+RUN mkdir /tmp/openmpi && \
+    cd /tmp/openmpi && \
+    wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.gz && \
+    tar zxf openmpi-4.1.1.tar.gz && \
+    cd openmpi-4.1.1 && \
+    ./configure --enable-orterun-prefix-by-default && \
+    make -j $(nproc) all && \
+    make install && \
+    ldconfig && \
+    rm -rf /tmp/openmpi
+
+# Install OpenSSH for MPI to communicate between containers
+RUN apt-get update && apt-get install -y --no-install-recommends openssh-client openssh-server && \
+    mkdir -p /var/run/sshd
+
+# Allow OpenSSH to talk to containers without asking for confirmation
+RUN cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking > /etc/ssh/ssh_config.new && \
+    echo "    StrictHostKeyChecking no" >> /etc/ssh/ssh_config.new && \
+    mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config
+
+# -------------------------
+# Install core PIP packages.
+# -------------------------
+# Upgrade pip.
+RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
+    python get-pip.py && \
+    rm get-pip.py
+
+# Core tools.
+RUN pip install \
+    awscli==1.20.27 \
+    boto3==1.18.27 \
+    coloredlogs==15.0.1 \
+    hydra-core==1.1.1 \
+    matplotlib==3.4.3 \
+    mpi4py==3.1.1 \
+    numpy==1.20.3 \
+    pandas==1.3.2 \
+    requests==2.26.0 \
+    scikit-image==0.18.2 \
+    scipy==1.7.1 \
+    seaborn==0.11.2 \
+    tenacity==8.0.1 \
+    tqdm==4.62.2 \
+    wandb==0.12.0
+
+RUN pip install numba==0.54.0 Cython==0.29.24 pycocotools==2.0.2 nuscenes-devkit==1.1.7
+
+# Install pytorch 1.9+cu111
+RUN pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+
+# Install fvcore and detectron2.
+ENV FVCORE_CACHE="/tmp"
+RUN pip install -U 'git+https://github.com/facebookresearch/fvcore'
+RUN python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.9/index.html
+
+# Pre-built pytorch3d
+RUN pip install pytorch3d -f https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py38_cu111_pyt190/download.html
+
+#-----------------------
+# Copy working directory
+#-----------------------
+ARG WORKSPACE
+COPY . ${WORKSPACE}
+
+ENV PYTHONPATH "${PYTHONPATH}:${WORKSPACE}/tridet/"
+
+WORKDIR ${WORKSPACE}

@@ -1,0 +1,67 @@
+# Number of images per batch across all machines.
+# If we have 16 GPUs and IMS_PER_BATCH = 32,
+# each GPU will see 2 images per batch.
+# May be adjusted automatically if REFERENCE_WORLD_SIZE is set.
+IMS_PER_BATCH: 16
+
+# Update scheme of torch.optim.SGD:
+#   https://github.com/pytorch/pytorch/blob/master/torch/optim/sgd.py#L34
+BASE_LR: 0.001
+MOMENTUM: 0.9
+
+NESTEROV: False
+
+WEIGHT_DECAY: 0.0001
+# The weight decay that's applied to parameters of normalization layers
+# (typically the affine transformation)
+WEIGHT_DECAY_NORM: 0.0
+
+# Detectron v1 (and previous detection code) used a 2x higher LR and 0 WD for
+# biases. This is not useful (at least for recent models). You should avoid
+# changing these and they exist only to reproduce Detectron v1 training if
+# desired.
+BIAS_LR_FACTOR: 1.0
+WEIGHT_DECAY_BIAS: ${.WEIGHT_DECAY}
+
+GAMMA: 0.1
+
+# See detectron2/solver/build.py for LR scheduler options
+LR_SCHEDULER_NAME: WarmupMultiStepLR
+# The iteration number to decrease learning rate by GAMMA.
+STEPS: [30000]
+
+WARMUP_FACTOR: 0.0001
+WARMUP_ITERS: 2000
+WARMUP_METHOD: "linear"
+
+# Gradient clipping
+CLIP_GRADIENTS:
+  ENABLED: False
+  # Type of gradient clipping, currently 2 values are supported:
+  # - "value": the absolute values of elements of each gradients are clipped
+  # - "norm": the norm of the gradient for each parameter is clipped thus
+  #   affecting all elements in the parameter
+  CLIP_TYPE: "value"
+  # Maximum absolute value used for clipping gradients
+  CLIP_VALUE: 1.0
+  # Floating point number p for L-p norm to be used with the "norm"
+  # gradient clipping type; for L-inf, please specify .inf
+  NORM_TYPE: 2.0
+
+# Save a checkpoint after every this number of iterations
+CHECKPOINT_PERIOD: 5000
+
+# Support mixed precision training.
+MIXED_PRECISION_ENABLED: False
+
+# If any parameters might not be used in forward pass, turn on this to avoid error in DDP.
+# See "Internal Design" -> "Forward Pass": https://pytorch.org/docs/stable/notes/ddp.html
+DDP_FIND_UNUSED_PARAMETERS: False
+
+# Run multiple batches of size IMS_PER_BATCH before doing a backward pass.
+# The effective batch size: IMS_PER_BATCH x ACCUMULATE_GRAD_BATCHES
+ACCUMULATE_GRAD_BATCHES: 1
+
+# If True, then SyncBN use only workers of the same machine to compute batch stats used in batchnorm.
+# If False, then SyncBN uses all workers across all machines.
+SYNCBN_USE_LOCAL_WORKERS: False

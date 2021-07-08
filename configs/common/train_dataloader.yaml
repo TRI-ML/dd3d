@@ -1,0 +1,15 @@
+# Number of data loading threads
+NUM_WORKERS: 4
+
+FILTER_EMPTY_ANNOTATIONS: True
+
+# Options: TrainingSampler, RepeatFactorTrainingSampler
+SAMPLER: TrainingSampler
+# Repeat threshold for RepeatFactorTrainingSampler
+REPEAT_THRESHOLD: 0.4
+
+# If True, each batch should contain only images for which the aspect ratio
+# is compatible. This groups portrait images together, and landscape images
+# are not batched with portrait images.
+# NOTE (dennis.park): This is set to True in detectron2.
+ASPECT_RATIO_GROUPING: False

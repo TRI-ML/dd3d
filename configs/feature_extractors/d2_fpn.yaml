@@ -1,0 +1,9 @@
+IN_FEATURES: ${..BACKBONE.OUT_FEATURES}
+# By default ('None'), returns all features.
+OUT_FEATURES:
+
+OUT_CHANNELS: 256
+NORM: BN
+
+# Types for fusing the FPN top-down and lateral features. Can be either "sum" or "avg"
+FUSE_TYPE: sum

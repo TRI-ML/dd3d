@@ -1,0 +1,15 @@
+defaults:
+  - defaults
+
+USE_TEST: False
+
+MODEL:
+  CHECKPOINT: ''
+
+WANDB:
+  ENABLED: False
+
+SOLVER:
+  IMS_PER_BATCH: 4
+TEST:
+  IMS_PER_BATCH: 4

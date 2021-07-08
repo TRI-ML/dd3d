@@ -1,0 +1,9 @@
+defaults:
+  - d2_fpn@FPN
+
+BUILDER: build_fcos_vovnet_fpn_backbone_p6
+
+BACKBONE:
+  NAME: V-99-eSE
+  OUT_FEATURES: [stage2, stage3, stage4, stage5]
+  NORM: BN
