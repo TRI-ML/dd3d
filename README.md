@@ -48,10 +48,10 @@ export AWS_DEFAULT_REGION="<something>"
 export WANDB_ENTITY="<something>"
 export WANDB_API_KEY="<something>"
 ```
-You should also enable these features in configuration, such as [`WANDB.ENABLED`](https://github.awsinternal.tri.global/dennis-park/dd3d-internal/blob/init/configs/defaults.yaml#L19) and [`SYNC_OUTPUT_DIR_S3.ENABLED`](https://github.awsinternal.tri.global/dennis-park/dd3d-internal/blob/init/configs/defaults.yaml#L33).
+You should also enable these features in configuration, such as [`WANDB.ENABLED`](https://github.com/TRI-ML/dd3d/blob/main/configs/defaults.yaml#L14) and [`SYNC_OUTPUT_DIR_S3.ENABLED`](https://github.com/TRI-ML/dd3d/blob/main/configs/defaults.yaml#L29).
 
 ### Datasets
-By default, datasets are assumed to be downloaded in `/data/datasets/<dataset-name>` (can be a symbolic link). The dataset root is configurable by [`DATASET_ROOT`](https://github.awsinternal.tri.global/dennis-park/dd3d-internal/blob/init/configs/defaults.yaml#L39).
+By default, datasets are assumed to be downloaded in `/data/datasets/<dataset-name>` (can be a symbolic link). The dataset root is configurable by [`DATASET_ROOT`](https://github.com/TRI-ML/dd3d/blob/main/configs/defaults.yaml#L35).
 
 #### KITTI
 
@@ -168,8 +168,8 @@ The configuration is modularized by various components such as [datasets](./conf
 
 
 ### Using multiple GPUs
-The [training script](./scripts/train.py) supports (single-node) multi-GPU for training and evaluation via [mpirun](https://www.open-mpi.org/doc/v4.0/man1/mpirun.1.php). This is most conveniently executed by the `make docker-run-mpi` command (see [above](#installation)).
-Internally, `IMS_PER_BATCH` parameters of the [optimizer](https://github.awsinternal.tri.global/dennis-park/dd3d-internal/blob/master/configs/defaults/optimizer.yaml#L5) and the [evaluator](https://github.awsinternal.tri.global/dennis-park/dd3d-internal/blob/master/configs/defaults/test.yaml#L9) denote the **total** size of batch that is sharded across available GPUs while training or evaluating. They are required to be set as a multuple of available GPUs.
+The [training script](./scripts/train.py) supports (single-node) multi-GPU for training and evaluation via [mpirun](https://www.open-mpi.org/doc/v4.1/man1/mpirun.1.php). This is most conveniently executed by the `make docker-run-mpi` command (see [above](#installation)).
+Internally, `IMS_PER_BATCH` parameters of the [optimizer](https://github.com/TRI-ML/dd3d/blob/main/configs/common/optimizer.yaml#L5) and the [evaluator](https://github.com/TRI-ML/dd3d/blob/main/configs/common/test.yaml#L9) denote the **total** size of batch that is sharded across available GPUs while training or evaluating. They are required to be set as a multuple of available GPUs.
 
 ### Evaluation
 One can run only evaluation using the pretrained models:
@@ -180,7 +180,7 @@ One can run only evaluation using the pretrained models:
 ```
 
 ### Gradient accumulation
-If you have insufficient GPU memory for any experiment, you can use [gradient accumulation](https://towardsdatascience.com/what-is-gradient-accumulation-in-deep-learning-ec034122cfa) by configuring [`ACCUMULATE_GRAD_BATCHES`](https://github.awsinternal.tri.global/dennis-park/dd3d-internal/blob/init/configs/defaults/optimizer.yaml#L63), at the cost of longer training time. For instance, if the experiment requires at least 400 of GPU memory (e.g. [V2-99, KITTI](./configs/experiments/dd3d_kitti_v99.yaml)) and you have only 128 (e.g., 8 x 16G GPUs), then you can update parameters at every 4th step:
+If you have insufficient GPU memory for any experiment, you can use [gradient accumulation](https://towardsdatascience.com/what-is-gradient-accumulation-in-deep-learning-ec034122cfa) by configuring [`ACCUMULATE_GRAD_BATCHES`](https://github.com/TRI-ML/dd3d/blob/main/configs/common/optimizer.yaml#L63), at the cost of longer training time. For instance, if the experiment requires at least 400 of GPU memory (e.g. [V2-99, KITTI](./configs/experiments/dd3d_kitti_v99.yaml)) and you have only 128 (e.g., 8 x 16G GPUs), then you can update parameters at every 4th step:
 ```bash
 # The original batch size is 64.
 ./scripts/train.py +experiments=dd3d_kitti_v99 SOLVER.IMS_PER_BATCH=16 SOLVER.ACCUMULATE_GRAD_BATCHES=4
