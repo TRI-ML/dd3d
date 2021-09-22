@@ -140,6 +140,9 @@ The DD3D models pre-trained on dense depth estimation using DDAD15M can be downl
 | DLA34 | [model](https://tri-ml-public.s3.amazonaws.com/github/dd3d/pretrained/depth_pretrained_dla34-y1urdmir-20210422_165446-model_final-remapped.pth) |
 | V2-99 | [model](https://tri-ml-public.s3.amazonaws.com/github/dd3d/pretrained/depth_pretrained_v99-3jlw0p36-20210423_010520-model_final-remapped.pth) |
 
+#### (Optional) Eigen-clean subset of KITTI raw.
+To train our Pseudo-Lidar detector, we curated a new subset of KITTI (raw) dataset and use it to fine-tune its depth network. This subset can be downloaded [here](https://tri-ml-public.s3.amazonaws.com/github/dd3d/eigen_clean.txt). Each row contains left and right image pairs. The KITTI raw dataset can be download [here](http://www.cvlibs.net/datasets/kitti/raw_data.php).
+
 ### Validating installation
 To validate and visualize the dataloader (including [data augmentation](./configs/defaults/augmentation.yaml)), run the following:
 
