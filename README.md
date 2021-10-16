@@ -13,7 +13,7 @@
 
 [Full video](https://youtu.be/rXBoUpq9CVQ)
 
-Official [PyTorch](https://pytorch.org/) implementation of _DD3D_: [**Is Pseudo-Lidar needed for Monocular 3D Object detection?" (ICCV 2021)**](https://arxiv.org/abs/2108.06417),
+Official [PyTorch](https://pytorch.org/) implementation of _DD3D_: [**Is Pseudo-Lidar needed for Monocular 3D Object detection? (ICCV 2021)**](https://arxiv.org/abs/2108.06417),
 *Dennis Park<sup>\*</sup>, Rares Ambrus<sup>\*</sup>, Vitor Guizilini, Jie Li, and Adrien Gaidon*.
 
 ## Installation
