@@ -212,10 +212,10 @@ The source code is released under the [MIT license](LICENSE.md). We note that so
 
 ## Reference
 ```
-@inproceedings{dd3d,
+@inproceedings{park2021dd3d,
   author = {Dennis Park and Rares Ambrus and Vitor Guizilini and Jie Li and Adrien Gaidon},
   title = {Is Pseudo-Lidar needed for Monocular 3D Object detection?},
   booktitle = {IEEE/CVF International Conference on Computer Vision (ICCV)},
-  primaryClass = {cs.CV}
+  primaryClass = {cs.CV},
   year = {2021},
 }
