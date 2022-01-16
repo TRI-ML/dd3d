@@ -13,12 +13,12 @@ from detectron2.data import MetadataCatalog
 from detectron2.structures.boxes import BoxMode
 from metropolis import Metropolis
 from metropolis.utils.data_classes import Box, Box2d, EquiBox2d
+from metropolis.utils.color_map import get_colormap
 
-# from tridet.data import collect_dataset_dicts
-# from tridet.structures.boxes3d import GenericBoxes3D
+from tridet.data import collect_dataset_dicts
+from tridet.structures.boxes3d import GenericBoxes3D
 from tridet.structures.pose import Pose
-# from tridet.utils.geometry import project_points3d
-# from tridet.utils.visualization import float_to_uint8_color
+from tridet.utils.geometry import project_points3d
 
 
 ATTRIBUTE_IDS = {  # TODO: set attributes ids
@@ -38,7 +38,7 @@ ATTRIBUTE_IDS = {  # TODO: set attributes ids
 }
 
 # CAMERA_NAMES = ('CAM_EQUIRECTANGULAR', )
-CAMERA_NAMES = ('CAM_FRONT', 'CAM_LEFT', 'CAM_RIGHT', 'CAM_BACK') # TODO: Process all cameras
+CAMERA_NAMES = ('CAM_FRONT', 'CAM_LEFT', 'CAM_RIGHT', 'CAM_BACK')  # TODO: Process all cameras
 
 MAX_NUM_ATTRIBUTES = 10
 
@@ -70,6 +70,9 @@ class MetropolisDataset(Dataset):
 
         self.dataset_item_info = self._build_dataset_item_info()
 
+    def __len__(self):
+        return len(self.dataset_item_info)
+
     def get_instance_annotations(self,
                 box_3d_list: List[Box],
                 box_2d_list: Union[List[Box2d], List[EquiBox2d]],
@@ -77,10 +80,10 @@ class MetropolisDataset(Dataset):
                 image_shape: Tuple[int, int]) -> List[OrderedDict]:
 
         annotations = []
-        for box_3d, box_2d in zip(box_3d_list, box_2d_list):
+        for box_3d, _ in zip(box_3d_list, box_2d_list):
             # assert box_3d.token == box_2d.token # TODO: doesnt match. Fix
             sample_annotation = self.met.get('sample_annotation', box_3d.token)  # TODO: can be called before for loop?
-            sample_annotation_2d = self.met.get('sample_annotation_2d', box_2d.token)
+            # sample_annotation_2d = self.met.get('sample_annotation_2d', box_2d.token)
 
             annotation = OrderedDict()
 
@@ -97,31 +100,39 @@ class MetropolisDataset(Dataset):
             # ------
             # 3D box
             # ------
-            # bbox3d = GenericBoxes3D(box_3d.orientation, box_3d.center, box_3d.lwh)  # TODO: Check whether LWH or WLH
-            # annotation['bbox3d'] = bbox3d.vectorize().tolist()[0]
-            annotation['bbox3d'] = None
+            bbox3d = GenericBoxes3D(box_3d.orientation, box_3d.center, box_3d.lwh)  # TODO: Check whether LWH or WLH
+            annotation['bbox3d'] = bbox3d.vectorize().tolist()[0]
+            # annotation['bbox3d'] = None
 
             # -------
             # 2D box
             # -------
-            annotation['bbox'] = None  # TODO: Fix points for EquiBox2d
+            corners = project_points3d(bbox3d.corners.cpu().numpy().squeeze(0), cam_intrinsic)
+            l, t = corners[:, 0].min(), corners[:, 1].min()
+            r, b = corners[:, 0].max(), corners[:, 1].max()
+
+            x1 = max(0, l)
+            y1 = max(0, t)
+            x2 = min(image_shape[1], r)
+            y2 = min(image_shape[0], b)
+
+            annotation['bbox'] = [x1, y1, x2, y2]  # TODO: Fix points for EquiBox2d
             annotation['bbox_mode'] = BoxMode.XYXY_ABS
 
             # --------
             # Track ID
             # --------
-            # getind does
-            annotation['track_id'] = self.met.getind('instance', sample_annotation_2d['instance_token'])
+            annotation['track_id'] = self.met.getind('instance', sample_annotation['instance_token'])
 
             # ---------
             # Attribute
             # ---------
-            attr_tokens = sample_annotation_2d['attribute_tokens']  # TODO: Fix attribute use. There are more than 1
-            attribute_id = MAX_NUM_ATTRIBUTES
-            if attr_tokens:
-                attribute = self.met.get('attribute', attr_tokens[0])['name']
-                attribute_id = ATTRIBUTE_IDS[attribute]
-            annotation['attribute_id'] = attribute_id
+            # attr_tokens = sample_annotation_2d['attribute_tokens']  # TODO: Fix attribute use. There are more than 1
+            # attribute_id = MAX_NUM_ATTRIBUTES
+            # if attr_tokens:
+            #     attribute = self.met.get('attribute', attr_tokens[0])['name']
+            #     attribute_id = ATTRIBUTE_IDS[attribute]
+            # annotation['attribute_id'] = attribute_id
 
             annotations.append(annotation)
 
@@ -193,23 +204,24 @@ class MetropolisDataset(Dataset):
             print(f"{attr['name']}:  {attr['description']}")
 
 
-
-
 @functools.lru_cache(maxsize=1000)
 def build_metropolis_dataset(name, root_dir):
     dataset = MetropolisDataset(name, root_dir)
-    # dataset_dicts = collect_dataset_dicts(dataset)
-    # return dataset_dicts
-    return dataset
+    dataset_dicts = collect_dataset_dicts(dataset)
+    return dataset_dicts
+
 
 def register_metropolis_metadata(dataset_name):
     metadata = MetadataCatalog.get(dataset_name)
     metadata.thing_classes = list(CATEGORY_IDS.keys())
-    # metadata.thing_colors = [COLORMAP[klass] for klass in metadata.thing_classes]
+
+    colormap = get_colormap()
+    metadata.thing_colors = [colormap[klass] for klass in metadata.thing_classes]
 
     metadata.id_to_name = {idx: klass for idx, klass in enumerate(metadata.thing_classes)}
     metadata.contiguous_id_to_name = {idx: klass for idx, klass in enumerate(metadata.thing_classes)}
     metadata.name_to_contiguous_id = {name: idx for idx, name in metadata.contiguous_id_to_name.items()}
 
+    # metadata.evaluators = ("metropolis_evaluator", ) # TODO: implement evaluator
     metadata.pred_visualizers = ("box3d_visualizer", )
     metadata.loader_visualizers = ("box3d_visualizer", )

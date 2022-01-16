@@ -27,7 +27,7 @@ if __name__ == '__main__':
 		print(dataset_dicts[0])
 	elif 'metropolis' in args.dataset_dir.lower():
 		dataset_dicts = build_metropolis_dataset(name=args.dataset_name, root_dir=args.dataset_dir)
-		for idx in range(5):
+		for idx in range(2):
 			print(dataset_dicts[idx])
 	else:
 		raise f'Unknown dataset with root dir: {args.dataset_dir}'

@@ -9,9 +9,9 @@ from tridet.data.datasets.metropolis.build import build_metropolis_dataset, regi
 
 LOG = logging.getLogger(__name__)
 
-METROPOLIS_ROOT = "Metropolis"  # TODO:
+METROPOLIS_ROOT = "metropolis_data"  # TODO:
 
-METROPOLIS_DATASET_NAMES = [
+METROPOLIS_DATASET_NAMES = [  # TODO: add unique names
     "train",
     "val",
     "test",
@@ -22,7 +22,7 @@ DATASET_DICTS_BUILDER = {name: (build_metropolis_dataset, dict(name=name)) for n
 METADATA_BUILDER = {name: (register_metropolis_metadata, {}) for name in DATASET_DICTS_BUILDER.keys()}
 
 
-def register_nuscenes_datasets(required_datasets, cfg):
+def register_metropolis_datasets(required_datasets, cfg):
 
     metropolis_datasets = sorted(list(set(required_datasets).intersection(DATASET_DICTS_BUILDER.keys())))
     if metropolis_datasets:

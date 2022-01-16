@@ -169,7 +169,7 @@ class DefaultDatasetMapper:
 
         if "annotations" in dataset_dict:
 
-            for anno in dataset_dict["annotations"]:
+            for     anno in dataset_dict["annotations"]:
                 if not self.task_manager.has_detection_task:
                     anno.pop("bbox", None)
                     anno.pop("bbox_mode", None)

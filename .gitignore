@@ -32,3 +32,6 @@ dist/
 *.swo
 *.swp
 *~
+
+# Data
+metropolis_data/

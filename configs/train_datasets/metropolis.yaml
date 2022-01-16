@@ -1,0 +1,9 @@
+defaults:
+  - base_train_dataset
+
+NAME: train
+
+#CANONICAL_BOX3D_SIZES: [
+#] TODO:
+
+NUM_CLASSES: 10
