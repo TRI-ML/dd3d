@@ -52,7 +52,7 @@ CATEGORY_IDS = OrderedDict({    # TODO: choose appropriate categories
     'object--vehicle--motorcycle': 6,
     'object--vehicle--truck': 7,
     'object--vehicle--group': 8,
-    'object--vehicle--other-vehicle': 9,
+    'object--vehicle--other-vehicle': 9
 })
 
 
@@ -80,9 +80,9 @@ class MetropolisDataset(Dataset):
                 image_shape: Tuple[int, int]) -> List[OrderedDict]:
 
         annotations = []
-        for box_3d, _ in zip(box_3d_list, box_2d_list):
+        for box_3d, box_2d in zip(box_3d_list, box_2d_list):
             # assert box_3d.token == box_2d.token # TODO: doesnt match. Fix
-            sample_annotation = self.met.get('sample_annotation', box_3d.token)  # TODO: can be called before for loop?
+            sample_annotation = self.met.get('sample_annotation_2d', box_2d.token)  # TODO: can be called before for loop?
             # sample_annotation_2d = self.met.get('sample_annotation_2d', box_2d.token)
 
             annotation = OrderedDict()
@@ -94,13 +94,18 @@ class MetropolisDataset(Dataset):
             # if category_id is None:
             #     continue
             # NOTE: We can define new index for OTHER, if category is not specified. Ex:
-            category_id = CATEGORY_IDS.get(box_3d.name, max(CATEGORY_IDS.values()) + 1)
+            category_id = CATEGORY_IDS.get(box_3d.name, max(CATEGORY_IDS.values()))
             annotation['category_id'] = category_id
-
+            R = box_3d.rotation_matrix
+            T = np.eye(4)
+            T[:3, :3] = R
+            T[:3, 3] = box_3d.center
+            T_inv = np.linalg.inv(T)
+            tvec = T_inv[:3, 3]
             # ------
             # 3D box
             # ------
-            bbox3d = GenericBoxes3D(box_3d.orientation, box_3d.center, box_3d.lwh)  # TODO: Check whether LWH or WLH
+            bbox3d = GenericBoxes3D(box_3d.orientation, box_3d.center, box_3d.lwh[[1, 0, 2]] )  # lwh -> wlh # TODO: Check 
             annotation['bbox3d'] = bbox3d.vectorize().tolist()[0]
             # annotation['bbox3d'] = None
 
@@ -123,7 +128,8 @@ class MetropolisDataset(Dataset):
             # Track ID
             # --------
             annotation['track_id'] = self.met.getind('instance', sample_annotation['instance_token'])
-
+            #if any(annotation['track_id'] == ann['track_id'] for ann in annotations):
+            #    continue
             # ---------
             # Attribute
             # ---------

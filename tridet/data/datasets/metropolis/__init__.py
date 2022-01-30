@@ -9,7 +9,7 @@ from tridet.data.datasets.metropolis.build import build_metropolis_dataset, regi
 
 LOG = logging.getLogger(__name__)
 
-METROPOLIS_ROOT = "metropolis_data"  # TODO:
+METROPOLIS_ROOT = "/mnt/datagrid/public_datasets/MapillaryMetropolisDataset"  # TODO:
 
 METROPOLIS_DATASET_NAMES = [  # TODO: add unique names
     "train",
@@ -31,8 +31,6 @@ def register_metropolis_datasets(required_datasets, cfg):
             fn, kwargs = DATASET_DICTS_BUILDER[name]
             kwargs.update({
                 'root_dir': os.path.join(cfg.DATASET_ROOT, METROPOLIS_ROOT),
-                'min_num_lidar_points': cfg.DATASETS.TRAIN.MIN_NUM_LIDAR_PTS,
-                'min_box_visibility': cfg.DATASETS.TRAIN.MIN_BOX_VISIBILITY
             })
             DatasetCatalog.register(name, partial(fn, **kwargs))
 
