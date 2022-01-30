@@ -19,7 +19,7 @@ from tridet.data import collect_dataset_dicts
 from tridet.structures.boxes3d import GenericBoxes3D
 from tridet.structures.pose import Pose
 from tridet.utils.geometry import project_points3d
-
+from tridet.data.datasets.metropolis.categories import CATEGORY_IDS
 
 # ATTRIBUTE_IDS = {  # TODO: set attributes ids
 #     'ambiguous': 0,
@@ -39,19 +39,6 @@ from tridet.utils.geometry import project_points3d
 
 CAMERA_NAMES = ('CAM_FRONT', 'CAM_LEFT', 'CAM_RIGHT', 'CAM_BACK')  # Note: only planar images are used
 
-
-CATEGORY_IDS = OrderedDict({    # TODO: choose appropriate categories
-    'human--person': 0,
-    'human--person--group': 1,
-    'human--rider--bicyclist': 2,
-    'object--vehicle--bicycle': 3,
-    'object--vehicle--bus': 4,
-    'object--vehicle--car': 5,
-    'object--vehicle--motorcycle': 6,
-    'object--vehicle--truck': 7,
-    'object--vehicle--group': 8,
-    'other': 9,
-})
 
 
 def _build_id(scene_name, sample_idx, datum_name):
@@ -96,14 +83,15 @@ class MetropolisDataset(Dataset):
                 continue
             # NOTE: We can define new index for OTHER, if category is not specified. Ex:
             # category_id = CATEGORY_IDS.get(box_3d.name, max(CATEGORY_IDS.values()) + 1)
+            # DEBUG:
+            # category_id = CATEGORY_IDS.get(box_3d.name, max(CATEGORY_IDS.values()))
             annotation['category_id'] = category_id
 
             # ------
             # 3D box
             # ------
-            bbox3d = GenericBoxes3D(box_3d.orientation, box_3d.center, box_3d.lwh)  # lwh -> wlh # TODO: Check whether LWH or WLH
+            bbox3d = GenericBoxes3D(box_3d.orientation, box_3d.center, box_3d.lwh)
             annotation['bbox3d'] = bbox3d.vectorize().tolist()[0]
-            # annotation['bbox3d'] = None
 
             # -------
             # 2D box
@@ -124,6 +112,9 @@ class MetropolisDataset(Dataset):
             # Track ID
             # --------
             annotation['track_id'] = self.met.getind('instance', sample_annotation['instance_token'])
+
+            # DEBUG:
+            # Ignore objects that are already in teh annotation list
             if any(annotation['track_id'] == ann['track_id'] for ann in annotations):
                 continue
             # ---------
@@ -145,7 +136,11 @@ class MetropolisDataset(Dataset):
         datum_token, sample_token, scene_name, sample_idx, datum_name = self.dataset_item_info[idx]
         datum = self.met.get('sample_data', datum_token)
 
-        filename, box_3d_list, box_2d_list, K = self.met.get_sample_data(datum_token, self.get)
+        filename, box_3d_list, box_2d_list, K = self.met.get_sample_data(
+            datum_token,
+            get_all_visible_boxes=self.get_all_visible_boxes,
+            use_flat_vehicle_coordinates=False,
+        )
         image_id, sample_id = _build_id(scene_name, sample_idx, datum_name)
         height, width = datum['height'], datum['width']
 
