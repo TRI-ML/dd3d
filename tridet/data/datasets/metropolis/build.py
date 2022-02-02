@@ -71,18 +71,14 @@ class MetropolisDataset(Dataset):
 
     def get_instance_annotations(self,
                 box_3d_list: List[Box],
-                box_2d_list: Union[List[Box2d], List[EquiBox2d]],
                 cam_intrinsic: np.array,
                 image_shape: Tuple[int, int]) -> List[OrderedDict]:
         """
         Builds list of dictionaries with instance annotations in Detectron2 Dataset format.
         """
         annotations = []
-        for box_3d, box_2d in zip(box_3d_list, box_2d_list):
+        for box_3d in box_3d_list:
             sample_annotation = self.met.get('sample_annotation', box_3d.token)  # TODO: can be called before for loop?
-            # sample_annotation_2d = self.met.get('sample_annotation_2d', box_2d.token)
-            # NOTE: This assertion fails. 3d and 2d boxes have different instance tokens.
-            # assert sample_annotation['instance_token'] == sample_annotation_2d['instance_token']
 
             # Init annotation:
             annotation = OrderedDict()
@@ -127,7 +123,7 @@ class MetropolisDataset(Dataset):
             x2 = min(image_shape[1], r)
             y2 = min(image_shape[0], b)
 
-            annotation['bbox'] = [x1, y1, x2, y2]  # TODO: Get box from box_2d?
+            annotation['bbox'] = [x1, y1, x2, y2]
             annotation['bbox_mode'] = BoxMode.XYXY_ABS
 
             # ---------
@@ -151,7 +147,7 @@ class MetropolisDataset(Dataset):
         datum = self.met.get('sample_data', datum_token)
 
         # Get annotations for the current sample
-        filename, box_3d_list, box_2d_list, K = self.met.get_sample_data(
+        filename, box_3d_list, _, K = self.met.get_sample_data(
             datum_token,
             get_all_visible_boxes=self.get_all_visible_boxes,
         )
@@ -185,7 +181,7 @@ class MetropolisDataset(Dataset):
         d2_dict['extrinsics'] = {'wxyz': list(pose_VS.quat.elements), 'tvec': list(pose_VS.tvec)}
 
         # Get annotations for each box
-        d2_dict['annotations'] = self.get_instance_annotations(box_3d_list, box_2d_list, K, (height, width))
+        d2_dict['annotations'] = self.get_instance_annotations(box_3d_list, K, (height, width))
 
         return d2_dict
 
