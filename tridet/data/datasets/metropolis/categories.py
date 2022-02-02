@@ -1,3 +1,6 @@
+"""
+File with specification of Metropolis Dataset categories and their assigned IDs
+"""
 from collections import OrderedDict
 
 CATEGORIES = [  # Note: List of categories which have instances in the TRAIN set
@@ -44,5 +47,28 @@ CATEGORIES = [  # Note: List of categories which have instances in the TRAIN set
 	"object--vehicle--truck",  # Truck
 	"object--vehicle--wheeled-slow",  # Wheeled slow vehicle
 ]
+# Small subset of categories. To use this - uncomment this part and comment previous.
+# TODO: Make it as config parameter
+# CATEGORIES = [  # Note: List of categories which have instances in the TRAIN set
+# 	"object--banner",  # Banner
+# 	"object--bench",  # Bench
+# 	"object--bike-rack",  # Bike rack
+# 	"object--catch-basin",  # Catch basin
+# 	"object--cctv-camera",  # CCTV camera
+# 	"object--fire-hydrant",  # Fire hydrant
+# 	"object--junction-box",  # Junction box
+# 	"object--mailbox",  # Mailbox
+# 	"object--street-light",  # Street light
+# 	"object--support--pole",  # Pole
+# 	"object--support--traffic-sign-frame",  # Traffic sign frame
+# 	"object--support--utility-pole",  # Utility pole
+# 	"object--traffic-light",  # Traffic Light
+# 	"object--trash-can",  # Trash can
+# 	"object--vehicle--bicycle",  # Bicycle
+# 	"object--vehicle--bus",  # Bus
+# 	"object--vehicle--car",  # Car
+# 	"object--vehicle--truck",  # Truck
+# ]
+
 
 CATEGORY_IDS = OrderedDict({key: idx for idx, key in enumerate(CATEGORIES)})

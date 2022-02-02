@@ -3,7 +3,7 @@ Metropolis dataset builder
 """
 import functools
 from collections import OrderedDict
-from typing import Tuple, List, Optional, Dict, Any, Union
+from typing import Tuple, List, Union
 
 import numpy as np
 from torch.utils.data import Dataset
@@ -41,24 +41,32 @@ CAMERA_NAMES = ('CAM_FRONT', 'CAM_LEFT', 'CAM_RIGHT', 'CAM_BACK')  # Note: only 
 
 
 
-def _build_id(scene_name, sample_idx, datum_name):
+def _build_id(scene_name: str, sample_idx: int, datum_name: str) -> Tuple[str, str]:
+    """
+    Builds sample and image ID strings
+    """
     sample_id = f"{scene_name}_{sample_idx:03d}"
     image_id = f"{sample_id}_{datum_name}"
     return image_id, sample_id
 
 
 class MetropolisDataset(Dataset):
-    def __init__(self, name: str, root_dir: str, datum_names: List[str] = CAMERA_NAMES):
+    """
+    Class which builds Metropolis Dataset,
+    and parse data into dictionaries in Detectron2 format.
+    """
+    def __init__(self, name: str, root_dir: str, datum_names: List[str] = CAMERA_NAMES) -> None:
         self.name = name
+        # Init Metropolis Dataset
         self.met = Metropolis(name, root_dir)
-        # self.__print_categories_with_instance() # TODO: Remove after debug
 
         self.datum_names = datum_names
         self.dataset_item_info = self._build_dataset_item_info()
 
+        # Debug parameter
         self.get_all_visible_boxes = True
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.dataset_item_info)
 
     def get_instance_annotations(self,
@@ -66,14 +74,29 @@ class MetropolisDataset(Dataset):
                 box_2d_list: Union[List[Box2d], List[EquiBox2d]],
                 cam_intrinsic: np.array,
                 image_shape: Tuple[int, int]) -> List[OrderedDict]:
-
+        """
+        Builds list of dictionaries with instance annotations in Detectron2 Dataset format.
+        """
         annotations = []
         for box_3d, box_2d in zip(box_3d_list, box_2d_list):
             sample_annotation = self.met.get('sample_annotation', box_3d.token)  # TODO: can be called before for loop?
-            sample_annotation_2d = self.met.get('sample_annotation_2d', box_2d.token)
-            assert sample_annotation['instance_token'] == sample_annotation_2d['instance_token']
+            # sample_annotation_2d = self.met.get('sample_annotation_2d', box_2d.token)
+            # NOTE: This assertion fails. 3d and 2d boxes have different instance tokens.
+            # assert sample_annotation['instance_token'] == sample_annotation_2d['instance_token']
 
+            # Init annotation:
             annotation = OrderedDict()
+
+            # --------
+            # Track ID
+            # --------
+            annotation['track_id'] = self.met.getind('instance', sample_annotation['instance_token'])
+
+            # DEBUG:
+            # Ignore objects that are already in teh annotation list
+            # NOTE: some instances have several corresponding boxes for one sample
+            if any(annotation['track_id'] == ann['track_id'] for ann in annotations):
+                continue
 
             # --------
             # Category
@@ -83,19 +106,18 @@ class MetropolisDataset(Dataset):
                 continue
             # NOTE: We can define new index for OTHER, if category is not specified. Ex:
             # category_id = CATEGORY_IDS.get(box_3d.name, max(CATEGORY_IDS.values()) + 1)
-            # DEBUG:
-            # category_id = CATEGORY_IDS.get(box_3d.name, max(CATEGORY_IDS.values()))
             annotation['category_id'] = category_id
 
             # ------
             # 3D box
             # ------
-            bbox3d = GenericBoxes3D(box_3d.orientation, box_3d.center, box_3d.lwh)
+            bbox3d = GenericBoxes3D(box_3d.orientation, box_3d.center, box_3d.lwh)  # NOTE: lwh is misleading naming
             annotation['bbox3d'] = bbox3d.vectorize().tolist()[0]
 
             # -------
             # 2D box
             # -------
+            # Retrieve 2D box from 3D box projection
             corners = project_points3d(bbox3d.corners.cpu().numpy().squeeze(0), cam_intrinsic)
             l, t = corners[:, 0].min(), corners[:, 1].min()
             r, b = corners[:, 0].max(), corners[:, 1].max()
@@ -108,15 +130,6 @@ class MetropolisDataset(Dataset):
             annotation['bbox'] = [x1, y1, x2, y2]  # TODO: Get box from box_2d?
             annotation['bbox_mode'] = BoxMode.XYXY_ABS
 
-            # --------
-            # Track ID
-            # --------
-            annotation['track_id'] = self.met.getind('instance', sample_annotation['instance_token'])
-
-            # DEBUG:
-            # Ignore objects that are already in teh annotation list
-            if any(annotation['track_id'] == ann['track_id'] for ann in annotations):
-                continue
             # ---------
             # Attribute
             # ---------
@@ -133,17 +146,20 @@ class MetropolisDataset(Dataset):
 
     def __getitem__(self, idx: int) -> OrderedDict:
 
+        # Get current sample info
         datum_token, sample_token, scene_name, sample_idx, datum_name = self.dataset_item_info[idx]
         datum = self.met.get('sample_data', datum_token)
 
+        # Get annotations for the current sample
         filename, box_3d_list, box_2d_list, K = self.met.get_sample_data(
             datum_token,
             get_all_visible_boxes=self.get_all_visible_boxes,
-            use_flat_vehicle_coordinates=False,
         )
+
         image_id, sample_id = _build_id(scene_name, sample_idx, datum_name)
         height, width = datum['height'], datum['width']
 
+        # Init dataset dictionary
         d2_dict = OrderedDict(
             file_name=filename,
             height=height,
@@ -174,6 +190,10 @@ class MetropolisDataset(Dataset):
         return d2_dict
 
     def _build_dataset_item_info(self) -> List[Tuple[str, str, str, int, str]]:
+        """
+        Splits datasets items into list of tuples.
+        Each item corresponds to one sample.
+        """
         dataset_items = []
 
         for scene in tqdm(self.met.scene):
@@ -188,7 +208,7 @@ class MetropolisDataset(Dataset):
 
         return dataset_items
 
-    def __print_categories_with_instance(self):  # NOTE: Debug
+    def __print_categories_with_instance(self) -> None:  # NOTE: Debug
         has_instance = 0
         for cat in self.met.category:
             if cat['has_instances']:
@@ -196,7 +216,7 @@ class MetropolisDataset(Dataset):
                 has_instance += 1
         print(has_instance)
 
-    def __print_attributes(self):  # NOTE: Debug
+    def __print_attributes(self) -> None:  # NOTE: Debug
         for attr in self.met.attribute:
             print(f"{attr['name']}:  {attr['description']}")
 
